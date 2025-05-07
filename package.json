@@ -1,4 +1,12 @@
-{
+"name": "production-node",
+  "version": "1.0.0",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js"
+  },
+  "author": "Rushikesh Gholap",
+  "license": "ISC",
+  "description": "",
   "dependencies": {
     "node":"v22.11.0",
     "cookie-parser": "^1.4.7",
@@ -8,4 +16,3 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^8.12.0"
   }
-}
