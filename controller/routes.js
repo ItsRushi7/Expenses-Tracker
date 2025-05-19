@@ -2,6 +2,7 @@ const { json } = require('express')
 const { User, Record } = require('../model/connection')
 const jwt = require('jsonwebtoken')
 const cookieParser = require('cookie-parser')
+const { OAuth2Client } = require('google-auth-library');
 const dotenv = require('dotenv')
 
 dotenv.config()
@@ -135,11 +136,11 @@ async function findRecord(req, res) {
     try {
 
         const id = String(req.params.id)
-  
+
         const updatByID = await Record.findById(id)
 
         return res.status(200).json(updatByID)
- 
+
     }
 
     catch (error) {
@@ -155,8 +156,8 @@ async function updateRecord(req, res) {
 
         const data = req.body;
         const id = data.id
-  
-        const updatByID = await Record.findByIdAndUpdate(id,data)
+
+        const updatByID = await Record.findByIdAndUpdate(id, data)
 
         if (updatByID == null) {
             return res.status(404).json({ error: 'User not found' });
@@ -172,6 +173,37 @@ async function updateRecord(req, res) {
         return res.status(500).json({ error: 'Failed to update user' });
     }
 
+}
+
+async function googleAuthentication(req, res) {
+
+    const client = new OAuth2Client(process.env.GOOGLE_CLIENT_ID); // Store your client ID in an environment variable
+
+    const { credential } = req.body;
+
+    try {
+        const ticket = await client.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID, // Specify the CLIENT_ID of the app that the ID token is intended for
+        });
+        const payload = ticket.getPayload();
+        const googleId = payload['sub'];
+        const email = payload['email'];
+        const name = payload['name'];
+        const picture = payload['picture'];
+
+        req.session.googleId = googleId;
+        req.session.email = email;
+        req.session.name = name;
+        req.session.picture = picture;
+        req.session.loggedIn = true;
+
+        return res.status(200).json({ message: 'Google sign-in successful' });
+
+    } catch (error) {
+        console.error('Error verifying Google ID token:', error);
+        return res.status(401).json({ error: 'Invalid Google ID token' });
+    }
 }
 
 function jwtVerification(req, res, next) {
@@ -198,4 +230,5 @@ module.exports = {
     deleteRecord,
     findRecord,
     updateRecord,
+    googleAuthentication
 }
